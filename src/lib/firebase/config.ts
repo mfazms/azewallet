@@ -7,12 +7,12 @@ import { getStorage } from 'firebase/storage';
 // These NEXT_PUBLIC_ keys are safe to expose in the browser —
 // security is enforced by Firestore/Storage Security Rules, not key secrecy.
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'AIzaSyDummyKeyForBuildPhaseOnly12345678',
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'dummy-project.firebaseapp.com',
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'dummy-project',
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'dummy-project.appspot.com',
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '123456789012',
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:123456789012:web:abcdef1234567890abcdef',
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyDcJMFt3uJQgSp3LPU80C5s2SHCR-l4fuQ",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "azefinancemgmt.firebaseapp.com",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "azefinancemgmt",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "azefinancemgmt.firebasestorage.app",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "984539892954",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:984539892954:web:bf4c3c6f63c9db77ee69e3",
 };
 
 // Initialize Firebase (singleton pattern — prevents duplicate initialization)
