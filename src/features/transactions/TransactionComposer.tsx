@@ -1,23 +1,24 @@
-'use client';
+﻿'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, X, ChevronDown } from 'lucide-react';
 import BottomSheet from '@/components/ui/BottomSheet';
 import { useAuthStore, useAppStore } from '@/stores';
-import { createTransaction } from '@/lib/firebase/firestore';
+import { createTransaction, updateTransaction } from '@/lib/firebase/firestore';
 import { uploadReceipt } from '@/lib/firebase/storage';
 import { DEFAULT_CATEGORIES } from '@/types';
-import type { TransactionType } from '@/types';
+import type { TransactionType, Transaction } from '@/types';
 
 interface TransactionComposerProps {
   isOpen: boolean;
   onClose: () => void;
+  editTransaction?: Transaction | null;
 }
 
-export default function TransactionComposer({ isOpen, onClose }: TransactionComposerProps) {
+export default function TransactionComposer({ isOpen, onClose, editTransaction }: TransactionComposerProps) {
   const { user } = useAuthStore();
-  const { accounts, categories, showToast, addTransaction } = useAppStore();
+  const { accounts, categories, showToast, addTransaction, removeTransaction } = useAppStore();
   const amountRef = useRef<HTMLInputElement>(null);
 
   // Form state
@@ -33,40 +34,54 @@ export default function TransactionComposer({ isOpen, onClose }: TransactionComp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
 
-  // Auto-focus amount on open
+  // Auto-focus amount on open and set data if editing
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => amountRef.current?.focus(), 400);
-      // Set defaults
-      if (accounts.length > 0 && !selectedAccountId) {
-        const defaultAccount = accounts.find(a => a.isDefault) || accounts[0];
-        setSelectedAccountId(defaultAccount.id);
+      
+      if (editTransaction) {
+        setType(editTransaction.type);
+        setAmount(editTransaction.amount.toLocaleString('id-ID'));
+        setMerchant(editTransaction.merchant || '');
+        setSelectedCategory(editTransaction.category);
+        setSelectedCategoryIcon(editTransaction.categoryIcon);
+        setSelectedAccountId(editTransaction.accountId);
+        setNote(editTransaction.note || '');
+        setImagePreview(editTransaction.imageUrl || null);
+      } else {
+        // Set defaults for new
+        if (accounts.length > 0 && !selectedAccountId) {
+          const defaultAccount = accounts.find(a => a.isDefault) || accounts[0];
+          setSelectedAccountId(defaultAccount.id);
+        }
       }
     }
-  }, [isOpen, accounts, selectedAccountId]);
+  }, [isOpen, accounts, selectedAccountId, editTransaction]);
 
   // Reset form on close
   useEffect(() => {
     if (!isOpen) {
       setTimeout(() => {
-        setType('expense');
-        setAmount('');
-        setMerchant('');
-        setSelectedCategory('');
-        setSelectedCategoryIcon('');
-        setNote('');
-        setImageFile(null);
-        setImagePreview(null);
+        if (!editTransaction) {
+          setType('expense');
+          setAmount('');
+          setMerchant('');
+          setSelectedCategory('');
+          setSelectedCategoryIcon('');
+          setNote('');
+          setImageFile(null);
+          setImagePreview(null);
+        }
         setShowCategories(false);
       }, 300);
     }
-  }, [isOpen]);
+  }, [isOpen, editTransaction]);
 
   const activeCategories = categories.length > 0 ? categories : DEFAULT_CATEGORIES.map((c, i) => ({ ...c, id: `default-${i}` }));
 
-  // Auto-suggest category from merchant text
+  // Auto-suggest category from merchant text (only if creating new)
   useEffect(() => {
-    if (!merchant || selectedCategory) return;
+    if (editTransaction || !merchant || selectedCategory) return;
 
     const lowerMerchant = merchant.toLowerCase();
     const foodKeywords = ['nasi', 'makan', 'coffee', 'kopi', 'warung', 'resto', 'food', 'lunch', 'dinner', 'breakfast', 'pecel', 'bakso', 'mie', 'sate', 'ayam', 'drink', 'tea', 'juice'];
@@ -87,7 +102,7 @@ export default function TransactionComposer({ isOpen, onClose }: TransactionComp
       const cat = activeCategories.find(c => c.name === 'Bills & Utilities');
       if (cat) { setSelectedCategory(cat.name); setSelectedCategoryIcon(cat.icon); }
     }
-  }, [merchant, selectedCategory, activeCategories]);
+  }, [merchant, selectedCategory, activeCategories, editTransaction]);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -108,19 +123,19 @@ export default function TransactionComposer({ isOpen, onClose }: TransactionComp
       const numAmount = parseFloat(amount.replace(/[^0-9]/g, ''));
       if (isNaN(numAmount) || numAmount <= 0) return;
 
-      let imageUrl: string | null = null;
+      let imageUrl: string | null = editTransaction?.imageUrl || null;
 
-      // Upload image if present
+      // Upload image if present and new
       if (imageFile) {
         const tempId = Date.now().toString();
         imageUrl = await uploadReceipt(user.uid, tempId, imageFile);
       }
 
       const selectedAccount = accounts.find(a => a.id === selectedAccountId);
-
-      const txId = await createTransaction(user.uid, {
+      
+      const payload = {
         amount: numAmount,
-        currency: 'IDR',
+        currency: 'IDR' as const,
         type,
         category: selectedCategory || 'Others',
         categoryIcon: selectedCategoryIcon || '📦',
@@ -129,40 +144,42 @@ export default function TransactionComposer({ isOpen, onClose }: TransactionComp
         merchant: merchant || '',
         note,
         imageUrl,
-        createdAtUTC: new Date().toISOString(),
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Jakarta',
-        deletedAt: null,
-      });
+      };
 
-      // Add to local state immediately for instant UI update
-      addTransaction({
-        id: txId,
-        amount: numAmount,
-        currency: 'IDR',
-        type,
-        category: selectedCategory || 'Others',
-        categoryIcon: selectedCategoryIcon || '📦',
-        accountId: selectedAccountId,
-        accountName: selectedAccount?.name || '',
-        merchant: merchant || '',
-        note,
-        imageUrl,
-        createdAtUTC: new Date().toISOString(),
-        timezone: 'Asia/Jakarta',
-        deletedAt: null,
-        updatedAt: new Date().toISOString(),
-      });
+      if (editTransaction) {
+        await updateTransaction(user.uid, editTransaction.id, payload);
+        // Remove old and add new for local state update
+        removeTransaction(editTransaction.id);
+        addTransaction({
+          ...editTransaction,
+          ...payload,
+          updatedAt: new Date().toISOString()
+        });
+        showToast('Transaction updated');
+      } else {
+        const txId = await createTransaction(user.uid, {
+          ...payload,
+          createdAtUTC: new Date().toISOString(),
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Jakarta',
+          deletedAt: null,
+        });
 
-      const sign = (type === 'income' || type === 'transfer_in') ? '+' : '-';
-      showToast(
-        `${sign}Rp${numAmount.toLocaleString('id-ID')} saved`,
-        undefined,
-        undefined
-      );
+        addTransaction({
+          id: txId,
+          ...payload,
+          createdAtUTC: new Date().toISOString(),
+          timezone: 'Asia/Jakarta',
+          deletedAt: null,
+          updatedAt: new Date().toISOString(),
+        });
+
+        const sign = (type === 'income' || type === 'transfer_in') ? '+' : '-';
+        showToast(`${sign}Rp${numAmount.toLocaleString('id-ID')} saved`, undefined, undefined);
+      }
 
       onClose();
     } catch (error) {
-      console.error('Error creating transaction:', error);
+      console.error('Error saving transaction:', error);
       showToast('Failed to save. Try again.');
     } finally {
       setIsSubmitting(false);
@@ -170,15 +187,15 @@ export default function TransactionComposer({ isOpen, onClose }: TransactionComp
   };
 
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose} title="Add Transaction">
+    <BottomSheet isOpen={isOpen} onClose={onClose} title={editTransaction ? "Edit Transaction" : "Add Transaction"}>
       <div className="tx-composer">
         {/* Type Selector */}
         <div className="tx-type-selector">
           {([
-            { key: 'expense' as TransactionType, label: '💸 Expense' },
-            { key: 'income' as TransactionType, label: '💰 Income' },
-            { key: 'transfer_in' as TransactionType, label: '📥 Transfer In' },
-            { key: 'transfer_out' as TransactionType, label: '📤 Transfer Out' },
+            { key: 'expense' as TransactionType, label: '⬇️ Expense' },
+            { key: 'income' as TransactionType, label: '⬆️ Income' },
+            { key: 'transfer_in' as TransactionType, label: '↗️ Transfer In' },
+            { key: 'transfer_out' as TransactionType, label: '↘️ Transfer Out' },
           ]).map((t) => (
             <button
               key={t.key}
@@ -219,39 +236,75 @@ export default function TransactionComposer({ isOpen, onClose }: TransactionComp
           autoComplete="off"
         />
 
-        {/* Category Selector */}
-        <button
-          className="tx-selector-btn"
-          onClick={() => setShowCategories(!showCategories)}
-        >
-          <span>
-            {selectedCategoryIcon || '📂'} {selectedCategory || 'Choose category'}
-          </span>
-          <ChevronDown size={18} />
-        </button>
+        {/* Category & Account Selection */}
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          {/* Category Dropdown Toggle */}
+          <button
+            className="input-field"
+            style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+            onClick={() => setShowCategories(!showCategories)}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span>{selectedCategoryIcon || '📁'}</span>
+              <span style={{ color: selectedCategory ? 'var(--color-text)' : 'var(--color-text-tertiary)' }}>
+                {selectedCategory || 'Category'}
+              </span>
+            </div>
+            <ChevronDown size={16} style={{ color: 'var(--color-text-secondary)' }} />
+          </button>
 
+          {/* Account Selection */}
+          <select
+            className="input-field"
+            style={{ flex: 1 }}
+            value={selectedAccountId}
+            onChange={(e) => setSelectedAccountId(e.target.value)}
+          >
+            {accounts.map(acc => (
+              <option key={acc.id} value={acc.id}>{acc.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Categories Drawer */}
         <AnimatePresence>
           {showCategories && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="tx-category-grid-wrapper"
+              style={{ overflow: 'hidden' }}
             >
-              <div className="tx-category-grid">
-                {activeCategories.map((cat) => (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '0.5rem',
+                padding: '0.5rem 0',
+              }}>
+                {activeCategories.map(cat => (
                   <button
-                    key={cat.id || cat.name}
-                    className={`tx-category-chip ${selectedCategory === cat.name ? 'tx-category-active' : ''}`}
+                    key={cat.id}
                     onClick={() => {
                       setSelectedCategory(cat.name);
                       setSelectedCategoryIcon(cat.icon);
                       setShowCategories(false);
                     }}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.75rem',
+                      borderRadius: 'var(--radius-md)',
+                      background: selectedCategory === cat.name ? 'var(--color-input-bg)' : 'transparent',
+                      border: 'none',
+                      cursor: 'pointer'
+                    }}
                   >
-                    <span className="tx-category-icon">{cat.icon}</span>
-                    <span className="tx-category-name">{cat.name}</span>
+                    <span style={{ fontSize: '1.5rem' }}>{cat.icon}</span>
+                    <span style={{ fontSize: '0.65rem', color: 'var(--color-text-secondary)', textAlign: 'center' }}>
+                      {cat.name}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -259,68 +312,72 @@ export default function TransactionComposer({ isOpen, onClose }: TransactionComp
           )}
         </AnimatePresence>
 
-        {/* Account Selector */}
-        {accounts.length > 0 && (
-          <div className="tx-account-row">
-            {accounts.slice(0, 4).map((acc) => (
-              <button
-                key={acc.id}
-                className={`tx-account-chip ${selectedAccountId === acc.id ? 'tx-account-active' : ''}`}
-                onClick={() => setSelectedAccountId(acc.id)}
-              >
-                {acc.name}
-              </button>
-            ))}
+        {/* Notes & Receipt */}
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <input
+            type="text"
+            placeholder="Add note..."
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            className="input-field"
+            style={{ flex: 1 }}
+          />
+
+          <label
+            className="input-field"
+            style={{
+              width: '3.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              background: imagePreview ? 'var(--color-accent)' : 'var(--color-input-bg)',
+              color: imagePreview ? '#FFF' : 'var(--color-text-secondary)',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+          >
+            {imagePreview ? (
+              <>
+                <img src={imagePreview} alt="Receipt" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />
+                <Camera size={18} style={{ position: 'relative', zIndex: 2 }} />
+              </>
+            ) : (
+              <Camera size={18} />
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageSelect}
+              hidden
+            />
+          </label>
+        </div>
+
+        {imagePreview && (
+          <div style={{ position: 'relative', marginTop: '0.5rem' }}>
+            <img src={imagePreview} alt="Receipt Preview" style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: 'var(--radius-md)' }} />
+            <button
+              onClick={() => { setImagePreview(null); setImageFile(null); }}
+              style={{
+                position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.5)',
+                color: '#FFF', border: 'none', borderRadius: '50%', padding: 4, cursor: 'pointer'
+              }}
+            >
+              <X size={14} />
+            </button>
           </div>
         )}
 
-        {/* Optional: Note */}
-        <input
-          type="text"
-          placeholder="Add a note (optional)"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          className="input-field"
-          autoComplete="off"
-        />
-
-        {/* Photo */}
-        <div className="tx-photo-section">
-          {imagePreview ? (
-            <div className="tx-photo-preview">
-              <img src={imagePreview} alt="Receipt" />
-              <button className="tx-photo-remove" onClick={() => { setImageFile(null); setImagePreview(null); }}>
-                <X size={16} />
-              </button>
-            </div>
-          ) : (
-            <label className="tx-photo-btn">
-              <Camera size={18} />
-              <span>Add receipt</span>
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleImageSelect}
-                hidden
-              />
-            </label>
-          )}
-        </div>
-
-        {/* Save Button */}
-        <motion.button
-          whileTap={{ scale: 0.97 }}
+        <button
           className="btn-primary"
           onClick={handleSubmit}
-          disabled={!amount || isSubmitting}
-          style={{ marginTop: '0.5rem' }}
+          disabled={!amount || !selectedAccountId || isSubmitting}
+          style={{ marginTop: '1rem', height: '3.5rem' }}
         >
-          {isSubmitting ? 'Saving...' : 'Save'}
-        </motion.button>
+          {isSubmitting ? 'Saving...' : (editTransaction ? 'Save Changes' : 'Save Transaction')}
+        </button>
       </div>
-
-      
     </BottomSheet>
   );
 }

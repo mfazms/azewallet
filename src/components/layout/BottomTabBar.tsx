@@ -1,14 +1,15 @@
-'use client';
+﻿'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, Activity, Wallet, Target, CreditCard, Plus } from 'lucide-react';
+import { Home, Activity, Target, CreditCard, Plus, Sparkles } from 'lucide-react';
 import { useAppStore } from '@/stores';
 
 const tabs = [
   { id: 'home', label: 'Home', icon: Home, path: '/dashboard' },
   { id: 'activity', label: 'Activity', icon: Activity, path: '/activity' },
   { id: 'fab', label: '', icon: Plus, path: '' }, // FAB placeholder
+  { id: 'ai', label: 'AI Chat', icon: Sparkles, path: '/ai' },
   { id: 'goals', label: 'Goals', icon: Target, path: '/goals' },
   { id: 'accounts', label: 'Accounts', icon: CreditCard, path: '/accounts' },
 ];

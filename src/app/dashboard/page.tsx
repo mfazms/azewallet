@@ -69,8 +69,9 @@ export default function DashboardPage() {
 
   const todayStr = new Intl.DateTimeFormat('en-US', {
     weekday: 'long',
-    month: 'short',
-    day: 'numeric'
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
   }).format(new Date());
 
   return (

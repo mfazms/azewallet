@@ -6,20 +6,20 @@
 
 :root {
   /* Light theme (default) */
-  --color-bg: #F2F2F7;
-  --color-bg-secondary: #FFFFFF;
-  --color-bg-tertiary: #F0F0F2;
-  --color-surface: rgba(255, 255, 255, 0.72);
+  --color-bg: #F5F5F7;
+  --color-bg-secondary: #E5E5EA;
+  --color-bg-tertiary: #D1D1D6;
+  --color-surface: rgba(255, 255, 255, 0.85);
   --color-surface-solid: #FFFFFF;
-  --color-surface-hover: rgba(255, 255, 255, 0.85);
+  --color-surface-hover: rgba(242, 242, 247, 0.9);
   
-  --ink: #0B0B0F;
-  --ink-secondary: rgba(11, 11, 15, 0.62);
-  --ink-tertiary: rgba(11, 11, 15, 0.38);
-  --hairline: rgba(11, 11, 15, 0.09);
+  --ink: #1D1D1F;
+  --ink-secondary: rgba(29, 29, 31, 0.62);
+  --ink-tertiary: rgba(29, 29, 31, 0.38);
+  --hairline: rgba(60, 60, 67, 0.12);
   
   --color-glass-border: rgba(255, 255, 255, 0.6);
-  --color-glass-bg: rgba(255, 255, 255, 0.55);
+  --color-glass-bg: rgba(255, 255, 255, 0.75);
   
   --color-text: var(--ink);
   --color-text-secondary: var(--ink-secondary);
@@ -81,9 +81,9 @@
   --color-bg: #000000;
   --color-bg-secondary: #0D0D0E;
   --color-bg-tertiary: #1C1C1E;
-  --color-surface: rgba(28, 28, 30, 0.72);
+  --color-surface: rgba(28, 28, 30, 0.85);
   --color-surface-solid: #0D0D0E;
-  --color-surface-hover: rgba(44, 44, 46, 0.85);
+  --color-surface-hover: rgba(44, 44, 46, 0.95);
   
   --ink: #F5F5F7;
   --ink-secondary: rgba(245, 245, 247, 0.62);
@@ -91,7 +91,7 @@
   --hairline: rgba(245, 245, 247, 0.12);
   
   --color-glass-border: rgba(255, 255, 255, 0.14);
-  --color-glass-bg: rgba(28, 28, 32, 0.55);
+  --color-glass-bg: rgba(28, 28, 32, 0.75);
 
   --color-overlay: rgba(0, 0, 0, 0.6);
   --color-input-bg: rgba(118, 118, 128, 0.24);
@@ -1175,8 +1175,8 @@ button, a, [role="button"], input, select, textarea {
           z-index: 900;
           background: var(--color-glass-bg);
           border: 1px solid var(--color-glass-border);
-          backdrop-filter: blur(20px) saturate(1.8);
-          -webkit-backdrop-filter: blur(20px) saturate(1.8);
+          backdrop-filter: blur(40px) saturate(2);
+          -webkit-backdrop-filter: blur(40px) saturate(2);
           border-radius: var(--radius-lg);
           box-shadow: 0 8px 24px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.25);
         }
@@ -1269,8 +1269,8 @@ button, a, [role="button"], input, select, textarea {
           left: 0;
           right: 0;
           background: var(--color-glass-bg);
-          backdrop-filter: blur(24px) saturate(1.8);
-          -webkit-backdrop-filter: blur(24px) saturate(1.8);
+          backdrop-filter: blur(40px) saturate(2);
+          -webkit-backdrop-filter: blur(40px) saturate(2);
           border-top: 1px solid var(--color-glass-border);
           border-radius: var(--radius-xl) var(--radius-xl) 0 0;
           box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);

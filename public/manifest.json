@@ -1,7 +1,7 @@
-{
-  "name": "SafeToSpend",
-  "short_name": "SafeToSpend",
-  "description": "Know if you're safe to spend in 3 seconds.",
+﻿{
+  "name": "AzeWallet",
+  "short_name": "AzeWallet",
+  "description": "AzeWallet Budget Monitoring App",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#000000",

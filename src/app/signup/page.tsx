@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -71,7 +71,7 @@ export default function SignupPage() {
             transition={{ delay: 0.1, type: 'spring', stiffness: 300, damping: 25 }}
             className="auth-logo"
           >
-            🚀
+            ðŸš€
           </motion.div>
           <h1 className="auth-title">Create your<br />account</h1>
           <p className="auth-subtitle">Start your financial journey today.</p>

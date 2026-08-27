@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -72,7 +72,8 @@ export default function OnboardingPage() {
             last4: '',
             color: '',
             gradient: suggestion.gradient,
-            icon: suggestion.icon,
+            icon: suggestion.icon || '🏦',
+            logoUrl: suggestion.logoUrl,
             balance,
             currency,
             isDefault: selectedAccounts.size === 1 || accName === Array.from(selectedAccounts)[0],
@@ -122,7 +123,7 @@ export default function OnboardingPage() {
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               className="ob-emoji"
             >
-              💰
+              ðŸ’°
             </motion.div>
             <h1 className="text-h1">Let&apos;s get your money<br />under control</h1>
             <p className="ob-desc">Set up takes less than 90 seconds. You can always change these later.</p>
@@ -136,7 +137,7 @@ export default function OnboardingPage() {
             <div className="ob-options">
               {(['IDR', 'USD', 'EUR', 'JPY', 'SGD', 'MYR'] as Currency[]).map((c) => (
                 <button key={c} className={`ob-option ${currency === c ? 'ob-selected' : ''}`} onClick={() => setCurrency(c)}>
-                  <span className="ob-option-icon">{c === 'IDR' ? '🇮🇩' : c === 'USD' ? '🇺🇸' : c === 'EUR' ? '🇪🇺' : c === 'JPY' ? '🇯🇵' : c === 'SGD' ? '🇸🇬' : '🇲🇾'}</span>
+                  <span className="ob-option-icon">{c === 'IDR' ? 'ðŸ‡®ðŸ‡©' : c === 'USD' ? 'ðŸ‡ºðŸ‡¸' : c === 'EUR' ? 'ðŸ‡ªðŸ‡º' : c === 'JPY' ? 'ðŸ‡¯ðŸ‡µ' : c === 'SGD' ? 'ðŸ‡¸ðŸ‡¬' : 'ðŸ‡²ðŸ‡¾'}</span>
                   <span>{c}</span>
                   {currency === c && <Check size={18} className="ob-check" />}
                 </button>
@@ -151,11 +152,11 @@ export default function OnboardingPage() {
             <p className="ob-desc">Choose your preferred language</p>
             <div className="ob-options">
               <button className={`ob-option ${language === 'id' ? 'ob-selected' : ''}`} onClick={() => setLanguage('id')}>
-                <span className="ob-option-icon">🇮🇩</span><span>Bahasa Indonesia</span>
+                <span className="ob-option-icon">ðŸ‡®ðŸ‡©</span><span>Bahasa Indonesia</span>
                 {language === 'id' && <Check size={18} className="ob-check" />}
               </button>
               <button className={`ob-option ${language === 'en' ? 'ob-selected' : ''}`} onClick={() => setLanguage('en')}>
-                <span className="ob-option-icon">🇺🇸</span><span>English</span>
+                <span className="ob-option-icon">ðŸ‡ºðŸ‡¸</span><span>English</span>
                 {language === 'en' && <Check size={18} className="ob-check" />}
               </button>
             </div>
@@ -187,7 +188,7 @@ export default function OnboardingPage() {
         return (
           <div className="ob-step">
             <h2 className="text-h2">When do you get paid?</h2>
-            <p className="ob-desc">This sets your budget cycle (e.g., 25th → your cycle runs 25th to 24th)</p>
+            <p className="ob-desc">This sets your budget cycle (e.g., 25th â†’ your cycle runs 25th to 24th)</p>
             <div className="ob-date-grid">
               {[1, 5, 10, 15, 20, 25, 28, 30].map((d) => (
                 <button key={d} className={`ob-date-btn ${paydayDate === d ? 'ob-selected' : ''}`} onClick={() => setPaydayDate(d)}>
@@ -205,10 +206,10 @@ export default function OnboardingPage() {
             <p className="ob-desc">Your main financial goal right now</p>
             <div className="ob-options">
               {[
-                { id: 'save', icon: '💰', label: 'Save money' },
-                { id: 'debt', icon: '💳', label: 'Pay off debt' },
-                { id: 'purchase', icon: '🎯', label: 'Save for a purchase' },
-                { id: 'emergency', icon: '🛡️', label: 'Emergency fund' },
+                { id: 'save', icon: 'ðŸ’°', label: 'Save money' },
+                { id: 'debt', icon: 'ðŸ’³', label: 'Pay off debt' },
+                { id: 'purchase', icon: 'ðŸŽ¯', label: 'Save for a purchase' },
+                { id: 'emergency', icon: 'ðŸ›¡ï¸', label: 'Emergency fund' },
               ].map((g) => (
                 <button key={g.id} className={`ob-option ${mainGoalType === g.id ? 'ob-selected' : ''}`} onClick={() => setMainGoalType(g.id)}>
                   <span className="ob-option-icon">{g.icon}</span><span>{g.label}</span>
@@ -270,7 +271,7 @@ export default function OnboardingPage() {
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               className="ob-emoji"
             >
-              🎉
+              ðŸŽ‰
             </motion.div>
             <h1 className="text-h1">You&apos;re all set!</h1>
             <p className="ob-desc">Your financial plan is ready. Every time you open this app, you&apos;ll know if you&apos;re safe to spend.</p>
@@ -334,7 +335,7 @@ export default function OnboardingPage() {
             disabled={isSubmitting}
             style={{ width: 'auto', padding: '0.75rem 2rem' }}
           >
-            {isSubmitting ? 'Setting up...' : 'Let\'s go! 🚀'}
+            {isSubmitting ? 'Setting up...' : 'Let\'s go! ðŸš€'}
           </button>
         )}
       </div>

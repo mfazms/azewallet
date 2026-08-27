@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogOut, Moon, Sun, User as UserIcon, Monitor, ChevronRight, Camera, Calendar } from 'lucide-react';
+import { LogOut, Moon, Sun, User as UserIcon, Monitor, ChevronRight, Camera, Calendar, Wallet } from 'lucide-react';
 import { useAuthStore, useAppStore } from '@/stores';
 import { signOut, updateUserPhotoURL } from '@/lib/firebase/auth';
 import { uploadProfilePhoto } from '@/lib/firebase/storage';
@@ -15,6 +15,15 @@ export default function SettingsPage() {
   const { theme, setTheme } = useAppStore();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isUpdatingPayday, setIsUpdatingPayday] = useState(false);
+  const [isUpdatingBudget, setIsUpdatingBudget] = useState(false);
+  const [budgetInput, setBudgetInput] = useState('');
+
+  // Sync budget input with profile on load
+  useEffect(() => {
+    if (profile?.monthlyIncome) {
+      setBudgetInput(profile.monthlyIncome.toString());
+    }
+  }, [profile?.monthlyIncome]);
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
@@ -57,6 +66,25 @@ export default function SettingsPage() {
       console.error('Error updating payday:', err);
     } finally {
       setIsUpdatingPayday(false);
+    }
+  };
+
+  const handleBudgetBlur = async () => {
+    if (!user || !profile) return;
+    const newBudget = parseInt(budgetInput.replace(/\D/g, ''), 10) || 0;
+    
+    // If it hasn't changed, do nothing
+    if (newBudget === profile.monthlyIncome) return;
+
+    setIsUpdatingBudget(true);
+    try {
+      await updateUserProfile(user.uid, { monthlyIncome: newBudget });
+      setProfile({ ...profile, monthlyIncome: newBudget });
+      setBudgetInput(newBudget.toString());
+    } catch (err) {
+      console.error('Error updating budget:', err);
+    } finally {
+      setIsUpdatingBudget(false);
     }
   };
 
@@ -151,6 +179,32 @@ export default function SettingsPage() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div className="settings-divider" />
+
+            {/* Monthly Budget Setting */}
+            <div className="settings-item">
+              <div className="settings-item-icon"><Wallet size={18} /></div>
+              <span className="settings-item-label">Monthly Budget (Rp)</span>
+              <input
+                type="text"
+                value={budgetInput}
+                onChange={(e) => setBudgetInput(e.target.value)}
+                onBlur={handleBudgetBlur}
+                disabled={isUpdatingBudget}
+                placeholder="e.g. 5000000"
+                style={{ 
+                  background: 'var(--color-input-bg)', 
+                  border: 'none', 
+                  borderRadius: 'var(--radius-md)', 
+                  padding: '4px 8px',
+                  color: 'var(--color-text)',
+                  fontSize: '15px',
+                  width: '100px',
+                  textAlign: 'right'
+                }}
+              />
             </div>
 
             <div className="settings-divider" />

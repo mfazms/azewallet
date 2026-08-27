@@ -2,7 +2,7 @@ import {
   doc, setDoc, getDoc, updateDoc, deleteDoc,
   collection, query, where, orderBy, getDocs,
   writeBatch, serverTimestamp, Timestamp,
-  limit, startAfter, DocumentSnapshot,
+  limit, startAfter, DocumentSnapshot, addDoc,
 } from 'firebase/firestore';
 import { db } from './config';
 import type {
@@ -479,5 +479,41 @@ async function recalculateDashboardSummary(uid: string): Promise<void> {
     });
   } catch (error) {
     console.error('Error recalculating dashboard summary:', error);
+  }
+}
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'model' | 'system';
+  parts: { text: string }[];
+  timestamp: string;
+}
+
+export async function getChatHistory(uid: string): Promise<ChatMessage[]> {
+  try {
+    const chatRef = collection(db, 'users', uid, 'chats');
+    const q = query(chatRef, orderBy('timestamp', 'asc'), limit(50));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as ChatMessage[];
+  } catch (error) {
+    console.error('Error fetching chat history:', error);
+    return [];
+  }
+}
+
+export async function saveChatMessage(uid: string, message: Omit<ChatMessage, 'id' | 'timestamp'>): Promise<string> {
+  try {
+    const chatRef = collection(db, 'users', uid, 'chats');
+    const docRef = await addDoc(chatRef, {
+      ...message,
+      timestamp: new Date().toISOString(),
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('Error saving chat message:', error);
+    throw error;
   }
 }

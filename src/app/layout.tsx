@@ -1,14 +1,14 @@
-import type { Metadata, Viewport } from 'next';
+﻿import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import AppShell from '@/components/layout/AppShell';
 
 export const metadata: Metadata = {
-  title: 'SafeToSpend',
+  title: 'AzeWallet',
   description: 'Know if you\'re safe to spend in 3 seconds.',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'SafeToSpend',
+    title: 'AzeWallet',
   },
   manifest: '/manifest.json', // Will be added later for PWA
 };

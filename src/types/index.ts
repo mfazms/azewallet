@@ -39,9 +39,12 @@ export interface Account {
   bankName: string;
   type: AccountType;
   last4: string;
+  accountNumber?: string;
+  accountName?: string;
   color: string;
   gradient: string;
   icon: string;
+  logoUrl?: string; // For real bank logos
   balance: number;
   currency: Currency;
   // Credit card specific
@@ -220,15 +223,25 @@ export const DEFAULT_CATEGORIES: Omit<Category, 'id'>[] = [
 
 // Default Indonesian bank/payment suggestions
 export const DEFAULT_ACCOUNT_SUGGESTIONS = [
-  { name: 'BCA', type: 'bank' as AccountType, gradient: 'linear-gradient(135deg, #003D79, #0066CC)', icon: '🏦' },
-  { name: 'BRI', type: 'bank' as AccountType, gradient: 'linear-gradient(135deg, #00529C, #0073E6)', icon: '🏦' },
-  { name: 'Mandiri', type: 'bank' as AccountType, gradient: 'linear-gradient(135deg, #003366, #0055A5)', icon: '🏦' },
-  { name: 'BNI', type: 'bank' as AccountType, gradient: 'linear-gradient(135deg, #E65100, #FF8F00)', icon: '🏦' },
-  { name: 'Jago', type: 'bank' as AccountType, gradient: 'linear-gradient(135deg, #FFD600, #FF9100)', icon: '🏦' },
-  { name: 'SeaBank', type: 'bank' as AccountType, gradient: 'linear-gradient(135deg, #00BFA5, #1DE9B6)', icon: '🏦' },
-  { name: 'GoPay', type: 'ewallet' as AccountType, gradient: 'linear-gradient(135deg, #00880F, #00C853)', icon: '💳' },
-  { name: 'OVO', type: 'ewallet' as AccountType, gradient: 'linear-gradient(135deg, #4527A0, #7C4DFF)', icon: '💳' },
-  { name: 'DANA', type: 'ewallet' as AccountType, gradient: 'linear-gradient(135deg, #1565C0, #42A5F5)', icon: '💳' },
-  { name: 'ShopeePay', type: 'ewallet' as AccountType, gradient: 'linear-gradient(135deg, #EE4D2D, #FF7043)', icon: '💳' },
-  { name: 'Cash', type: 'cash' as AccountType, gradient: 'linear-gradient(135deg, #546E7A, #90A4AE)', icon: '💵' },
+  // Banks
+  { name: 'BCA', group: 'Bank', type: 'bank' as AccountType, gradient: 'linear-gradient(135deg, #003D79, #0066CC)', logoUrl: 'https://logo.clearbit.com/bca.co.id' },
+  { name: 'BRI', group: 'Bank', type: 'bank' as AccountType, gradient: 'linear-gradient(135deg, #00529C, #0073E6)', logoUrl: 'https://logo.clearbit.com/bri.co.id' },
+  { name: 'Mandiri', group: 'Bank', type: 'bank' as AccountType, gradient: 'linear-gradient(135deg, #003366, #0055A5)', logoUrl: 'https://logo.clearbit.com/bankmandiri.co.id' },
+  { name: 'BNI', group: 'Bank', type: 'bank' as AccountType, gradient: 'linear-gradient(135deg, #E65100, #FF8F00)', logoUrl: 'https://logo.clearbit.com/bni.co.id' },
+  { name: 'Jago', group: 'Bank', type: 'bank' as AccountType, gradient: 'linear-gradient(135deg, #FFD600, #FF9100)', logoUrl: 'https://logo.clearbit.com/jago.com' },
+  { name: 'SeaBank', group: 'Bank', type: 'bank' as AccountType, gradient: 'linear-gradient(135deg, #00BFA5, #1DE9B6)', logoUrl: 'https://logo.clearbit.com/seabank.co.id' },
+  
+  // E-Wallet
+  { name: 'GoPay', group: 'E-Wallet', type: 'ewallet' as AccountType, gradient: 'linear-gradient(135deg, #00880F, #00C853)', logoUrl: 'https://logo.clearbit.com/gojek.com' },
+  { name: 'OVO', group: 'E-Wallet', type: 'ewallet' as AccountType, gradient: 'linear-gradient(135deg, #4527A0, #7C4DFF)', logoUrl: 'https://logo.clearbit.com/ovo.id' },
+  { name: 'DANA', group: 'E-Wallet', type: 'ewallet' as AccountType, gradient: 'linear-gradient(135deg, #1565C0, #42A5F5)', logoUrl: 'https://logo.clearbit.com/dana.id' },
+  { name: 'ShopeePay', group: 'E-Wallet', type: 'ewallet' as AccountType, gradient: 'linear-gradient(135deg, #EE4D2D, #FF7043)', logoUrl: 'https://logo.clearbit.com/shopeepay.co.id' },
+  
+  // E-Money
+  { name: 'Brizzi', group: 'E-Money', type: 'emoney' as AccountType, gradient: 'linear-gradient(135deg, #00529C, #0073E6)', logoUrl: 'https://logo.clearbit.com/bri.co.id' },
+  { name: 'Flazz', group: 'E-Money', type: 'emoney' as AccountType, gradient: 'linear-gradient(135deg, #003D79, #0066CC)', logoUrl: 'https://logo.clearbit.com/bca.co.id' },
+  { name: 'e-Money Mandiri', group: 'E-Money', type: 'emoney' as AccountType, gradient: 'linear-gradient(135deg, #003366, #0055A5)', logoUrl: 'https://logo.clearbit.com/bankmandiri.co.id' },
+  
+  // Cash
+  { name: 'Cash', group: 'Cash', type: 'cash' as AccountType, gradient: 'linear-gradient(135deg, #546E7A, #90A4AE)', icon: '💵' },
 ];

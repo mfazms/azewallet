@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
@@ -6,12 +6,15 @@ import { Search } from 'lucide-react';
 import { useAuthStore, useAppStore } from '@/stores';
 import { getTransactions } from '@/lib/firebase/firestore';
 import { formatCurrency, formatRelativeDate, formatTime } from '@/lib/formatting';
+import TransactionComposer from '@/features/transactions/TransactionComposer';
+import type { Transaction } from '@/types';
 
 export default function ActivityPage() {
   const { user } = useAuthStore();
   const { transactions, setTransactions } = useAppStore();
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('');
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -31,7 +34,7 @@ export default function ActivityPage() {
     return (
       tx.merchant.toLowerCase().includes(q) ||
       tx.category.toLowerCase().includes(q) ||
-      tx.note.toLowerCase().includes(q) ||
+      (tx.note || '').toLowerCase().includes(q) ||
       tx.accountName.toLowerCase().includes(q)
     );
   });
@@ -67,10 +70,10 @@ export default function ActivityPage() {
         <div className="act-filters">
           {[
             { value: '', label: 'All' },
-            { value: 'expense', label: '💸 Expense' },
-            { value: 'income', label: '💰 Income' },
-            { value: 'transfer_in', label: '📥 Transfer In' },
-            { value: 'transfer_out', label: '📤 Transfer Out' },
+            { value: 'expense', label: '⬇️ Expense' },
+            { value: 'income', label: '⬆️ Income' },
+            { value: 'transfer_in', label: '↗️ Transfer In' },
+            { value: 'transfer_out', label: '↘️ Transfer Out' },
           ].map((t) => (
             <button
               key={t.value}
@@ -107,6 +110,8 @@ export default function ActivityPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.03 }}
                   className="act-tx-item"
+                  onClick={() => setEditingTx(tx)}
+                  style={{ cursor: 'pointer' }}
                 >
                   <span className="act-tx-icon">{tx.categoryIcon || '📦'}</span>
                   <div className="act-tx-info">
@@ -131,6 +136,14 @@ export default function ActivityPage() {
           )}
         </div>
       </div>
+      
+      {editingTx && (
+        <TransactionComposer
+          isOpen={true}
+          onClose={() => setEditingTx(null)}
+          editTransaction={editingTx}
+        />
+      )}
     </div>
   );
 }
