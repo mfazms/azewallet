@@ -74,11 +74,18 @@ export default function DashboardPage() {
         animate="visible"
         className="dashboard"
       >
-        {/* Header */}
+        {/* Header (Greeting & Hero Number) */}
         <motion.header variants={itemVariants} className="dash-header">
           <div>
-            <p className="dash-greeting">{getGreeting()}</p>
-            <h1 className="dash-name">{firstName}</h1>
+            <p className="text-caption" style={{ color: 'var(--ink-tertiary)' }}>{getGreeting()}, {firstName}</p>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 4 }}>
+              <span className="text-h3" style={{ color: 'var(--ink-secondary)' }}>Rp</span>
+              <AnimatedNumber
+                value={safeToSpend}
+                className="text-hero-large"
+                formatter={(v) => Math.round(v).toLocaleString('id-ID')}
+              />
+            </div>
           </div>
           <a href="/settings" className="dash-avatar">
             {profile?.photoURL ? (
@@ -91,99 +98,60 @@ export default function DashboardPage() {
           </a>
         </motion.header>
 
-        {/* Safe to Spend — THE hero number */}
-        <motion.section variants={itemVariants} className="dash-safe-card glass-card">
-          <div className="dash-safe-label">
-            <Wallet size={16} />
-            <span>Safe to Spend Today</span>
-          </div>
-          <div className="dash-safe-amount">
-            <span className="dash-currency">Rp</span>
-            <AnimatedNumber
-              value={safeToSpend}
-              className="text-hero"
-              formatter={(v) => Math.round(v).toLocaleString('id-ID')}
-            />
-          </div>
-          {summary?.isOnTrack !== undefined && (
-            <div className={`dash-safe-status ${summary.isOnTrack ? 'status-good' : 'status-warn'}`}>
-              {summary.isOnTrack ? (
-                <>
-                  <TrendingUp size={14} />
-                  <span>On track — you&apos;re doing well</span>
-                </>
-              ) : (
-                <>
-                  <TrendingDown size={14} />
-                  <span>Spending fast — slow down a bit</span>
-                </>
-              )}
+        {/* Safe to Spend Today Card (Glass) */}
+        <motion.section variants={itemVariants} className="dash-safe-card glass-surface" style={{ padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div className="dash-safe-label" style={{ color: 'var(--ink-secondary)', marginBottom: 8, justifyContent: 'flex-start' }}>
+              <span>Safe to spend today</span>
             </div>
-          )}
-        </motion.section>
-
-        {/* Today's Spending Ring */}
-        <motion.section variants={itemVariants} className="dash-today solid-card">
-          <div className="dash-today-info">
-            <p className="text-caption">Today&apos;s Spending</p>
-            <div className="dash-today-amount">
-              <span className="text-h2 text-money">{formatCurrency(todaySpent)}</span>
-              <span className="text-caption"> / {formatCurrency(dailyLimit)}</span>
-            </div>
-            <div className="dash-today-bar-wrapper">
-              <div className="dash-today-bar">
-                <motion.div
-                  className="dash-today-bar-fill"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${Math.min(100, todayPercentage)}%` }}
-                  transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-                  style={{
-                    background: todayPercentage >= 90 ? 'var(--color-danger)'
-                      : todayPercentage >= 75 ? 'var(--color-warning)'
-                      : 'var(--color-income)',
-                  }}
-                />
+            {summary?.isOnTrack !== undefined && (
+              <div className={`dash-safe-status ${summary.isOnTrack ? 'status-good' : 'status-warn'}`} style={{ marginLeft: 0 }}>
+                {summary.isOnTrack ? (
+                  <>
+                    <TrendingUp size={14} />
+                    <span>On track</span>
+                  </>
+                ) : (
+                  <>
+                    <TrendingDown size={14} />
+                    <span>Spending fast</span>
+                  </>
+                )}
               </div>
-              <span className="text-caption">{todayPercentage}% used</span>
-            </div>
+            )}
           </div>
-          <ProgressRing progress={todayPercentage} size={80} strokeWidth={7}>
-            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text)' }}>
+          <ProgressRing progress={todayPercentage} size={64} strokeWidth={6}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink)' }}>
               {todayPercentage}%
             </span>
           </ProgressRing>
         </motion.section>
 
-        {/* Monthly Budget */}
-        <motion.section variants={itemVariants} className="dash-monthly solid-card">
+        {/* Monthly Budget Card (Glass) */}
+        <motion.section variants={itemVariants} className="dash-monthly glass-surface" style={{ padding: 16, marginTop: 16 }}>
           <div className="dash-monthly-header">
-            <p className="text-caption">Monthly Budget</p>
-            <span className="text-caption">{monthlyPercentage}%</span>
+            <span className="text-callout" style={{ color: 'var(--ink-secondary)', fontWeight: 500 }}>Monthly budget</span>
+            <span className="text-caption">{monthlyPercentage}% used</span>
           </div>
-          <div className="dash-monthly-amount">
+          <div className="dash-monthly-amount" style={{ marginTop: 8 }}>
             <span className="text-h3 text-money">{formatCompactCurrency(monthlySpent)}</span>
-            <span className="text-body-small" style={{ color: 'var(--color-text-secondary)' }}>
+            <span className="text-body-small" style={{ color: 'var(--ink-secondary)' }}>
               {' '} / {formatCompactCurrency(monthlyBudget)}
             </span>
           </div>
-          <div className="dash-progress-bar">
+          <div className="dash-progress-bar" style={{ marginTop: 12 }}>
             <motion.div
               className="dash-progress-fill"
               initial={{ width: 0 }}
               animate={{ width: `${Math.min(100, monthlyPercentage)}%` }}
               transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1], delay: 0.2 }}
               style={{
-                background: monthlyPercentage >= 90 ? 'var(--color-danger)'
+                background: monthlyPercentage >= 90 ? 'var(--color-expense)'
                   : monthlyPercentage >= 75 ? 'var(--color-warning)'
                   : 'var(--color-income)',
               }}
             />
           </div>
-          {summary && (
-            <p className="text-caption" style={{ marginTop: '0.5rem' }}>
-              {summary.daysRemainingInCycle} days remaining in cycle
-            </p>
-          )}
         </motion.section>
 
         {/* Main Goal */}

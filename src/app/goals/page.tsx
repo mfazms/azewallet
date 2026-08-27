@@ -79,7 +79,7 @@ export default function GoalsPage() {
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.08 }}
-                  className="goal-card solid-card"
+                  className="goal-card glass-surface"
                 >
                   <div className="goal-header-row">
                     <span className="goal-icon">{goal.icon || '🎯'}</span>

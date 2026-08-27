@@ -89,13 +89,13 @@ export default function AccountsPage() {
               style={{ background: acc.gradient }}
             >
               <div className="acc-card-header">
+                <p className="acc-card-balance">{formatCurrency(acc.balance)}</p>
                 <span className="acc-card-name">{acc.name}</span>
-                <span className="acc-card-type">
-                  {acc.type === 'bank' ? 'Bank' : acc.type === 'ewallet' ? 'E-Wallet' : acc.type === 'credit_card' ? 'Credit Card' : acc.type === 'cash' ? 'Cash' : acc.type}
-                </span>
               </div>
+              <span className="acc-card-type">
+                {acc.type === 'bank' ? 'Bank' : acc.type === 'ewallet' ? 'E-Wallet' : acc.type === 'credit_card' ? 'Credit Card' : acc.type === 'cash' ? 'Cash' : acc.type}
+              </span>
               {acc.last4 && <p className="acc-card-last4">•••• {acc.last4}</p>}
-              <p className="acc-card-balance text-money">{formatCurrency(acc.balance)}</p>
             </motion.div>
           ))}
         </div>

@@ -25,25 +25,7 @@ export default function BottomTabBar() {
 
   return (
     <nav className="tab-bar glass-heavy" role="tablist">
-      {tabs.map((tab) => {
-        if (tab.id === 'fab') {
-          return (
-            <button
-              key={tab.id}
-              className="fab-button"
-              onClick={() => setTransactionSheetOpen(true)}
-              aria-label="Add transaction"
-            >
-              <motion.div
-                whileTap={{ scale: 0.9 }}
-                className="fab-inner"
-              >
-                <Plus size={24} strokeWidth={2.5} color="#FFFFFF" />
-              </motion.div>
-            </button>
-          );
-        }
-
+      {tabs.filter(t => t.id !== 'fab').map((tab) => {
         const Icon = tab.icon;
         const active = isActive(tab.path);
 
@@ -57,21 +39,25 @@ export default function BottomTabBar() {
           >
             <div className="tab-icon-wrapper">
               <Icon
-                size={22}
+                size={24}
                 strokeWidth={active ? 2.2 : 1.8}
               />
-              {active && (
-                <motion.div
-                  layoutId="tab-indicator"
-                  className="tab-indicator"
-                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                />
-              )}
             </div>
             <span className="tab-label">{tab.label}</span>
           </button>
         );
       })}
+
+      {/* FAB Button - Rendered independently as it's absolute positioned */}
+      <button
+        className="fab-button"
+        onClick={() => setTransactionSheetOpen(true)}
+        aria-label="Add transaction"
+      >
+        <div className="fab-inner">
+          <Plus size={28} strokeWidth={2.5} />
+        </div>
+      </button>
 
       
     </nav>
