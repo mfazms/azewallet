@@ -65,6 +65,13 @@ export default function DashboardPage() {
 
   const displayName = profile?.displayName || user?.displayName || 'there';
   const firstName = displayName.split(' ')[0];
+  const avatarUrl = profile?.photoURL || user?.photoURL || '';
+
+  const todayStr = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric'
+  }).format(new Date());
 
   return (
     <div className="page-container">
@@ -77,7 +84,12 @@ export default function DashboardPage() {
         {/* Header (Greeting & Hero Number) */}
         <motion.header variants={itemVariants} className="dash-header">
           <div>
-            <p className="text-caption" style={{ color: 'var(--ink-tertiary)' }}>{getGreeting()}, {firstName}</p>
+            <p className="text-caption" style={{ color: 'var(--ink-tertiary)' }}>
+              {todayStr} &bull; {summary?.daysRemainingInCycle || 0} days to payday
+            </p>
+            <p className="text-body" style={{ color: 'var(--ink-secondary)', marginTop: 4, fontWeight: 500 }}>
+              {getGreeting()}, {firstName}
+            </p>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 4 }}>
               <span className="text-h3" style={{ color: 'var(--ink-secondary)' }}>Rp</span>
               <AnimatedNumber
@@ -88,8 +100,8 @@ export default function DashboardPage() {
             </div>
           </div>
           <a href="/settings" className="dash-avatar">
-            {profile?.photoURL ? (
-              <img src={profile.photoURL} alt="Profile" className="dash-avatar-img" />
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="Profile" className="dash-avatar-img" />
             ) : (
               <span className="dash-avatar-fallback">
                 {firstName.charAt(0).toUpperCase()}

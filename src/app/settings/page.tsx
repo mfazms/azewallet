@@ -2,17 +2,19 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogOut, Moon, Sun, User as UserIcon, Monitor, ChevronRight, Camera } from 'lucide-react';
+import { LogOut, Moon, Sun, User as UserIcon, Monitor, ChevronRight, Camera, Calendar } from 'lucide-react';
 import { useAuthStore, useAppStore } from '@/stores';
 import { signOut, updateUserPhotoURL } from '@/lib/firebase/auth';
 import { uploadProfilePhoto } from '@/lib/firebase/storage';
+import { updateUserProfile } from '@/lib/firebase/firestore';
 import type { ThemeMode } from '@/types';
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { user, profile } = useAuthStore();
+  const { user, profile, setProfile } = useAuthStore();
   const { theme, setTheme } = useAppStore();
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isUpdatingPayday, setIsUpdatingPayday] = useState(false);
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
@@ -41,6 +43,20 @@ export default function SettingsPage() {
       console.error('Error uploading photo:', err);
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handlePaydayChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (!user || !profile) return;
+    const newDate = parseInt(e.target.value, 10);
+    setIsUpdatingPayday(true);
+    try {
+      await updateUserProfile(user.uid, { budgetCycleStart: newDate });
+      setProfile({ ...profile, budgetCycleStart: newDate });
+    } catch (err) {
+      console.error('Error updating payday:', err);
+    } finally {
+      setIsUpdatingPayday(false);
     }
   };
 
@@ -106,6 +122,35 @@ export default function SettingsPage() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div className="settings-divider" />
+
+            {/* Payday Setting */}
+            <div className="settings-item">
+              <div className="settings-item-icon"><Calendar size={18} /></div>
+              <span className="settings-item-label">Payday (Cycle Start)</span>
+              <select
+                value={profile?.budgetCycleStart || 1}
+                onChange={handlePaydayChange}
+                disabled={isUpdatingPayday}
+                className="theme-btn"
+                style={{ 
+                  background: 'var(--color-input-bg)', 
+                  border: 'none', 
+                  borderRadius: 'var(--radius-md)', 
+                  padding: '4px 8px',
+                  color: 'var(--color-text)',
+                  fontSize: '15px'
+                }}
+              >
+                {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                  <option key={day} value={day}>
+                    {day}
+                    {day === 1 ? 'st' : day === 2 ? 'nd' : day === 3 ? 'rd' : 'th'}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="settings-divider" />
