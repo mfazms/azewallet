@@ -12,7 +12,7 @@ import {
   updateProfile,
   User,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './config';
 import type { UserProfile } from '@/types';
 
@@ -171,4 +171,22 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
     return { uid, ...userDoc.data() } as UserProfile;
   }
   return null;
+}
+
+// ============================================
+// Update User Photo URL
+// ============================================
+
+export async function updateUserPhotoURL(uid: string, photoURL: string): Promise<void> {
+  // Update Auth Profile
+  const user = auth.currentUser;
+  if (user) {
+    await updateProfile(user, { photoURL });
+  }
+  
+  // Update Firestore Document
+  await updateDoc(doc(db, 'users', uid), {
+    photoURL,
+    updatedAt: serverTimestamp(),
+  });
 }

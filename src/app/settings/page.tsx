@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogOut, Moon, Sun, User as UserIcon, Monitor, ChevronRight } from 'lucide-react';
+import { LogOut, Moon, Sun, User as UserIcon, Monitor, ChevronRight, Camera } from 'lucide-react';
 import { useAuthStore, useAppStore } from '@/stores';
-import { signOut } from '@/lib/firebase/auth';
+import { signOut, updateUserPhotoURL } from '@/lib/firebase/auth';
+import { uploadProfilePhoto } from '@/lib/firebase/storage';
 import type { ThemeMode } from '@/types';
 
 export default function SettingsPage() {
@@ -24,6 +25,25 @@ export default function SettingsPage() {
     }
   };
 
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setIsUploading(true);
+    try {
+      const photoURL = await uploadProfilePhoto(user.uid, file);
+      await updateUserPhotoURL(user.uid, photoURL);
+      // Wait for auth listener to pick up change, or manually trigger reload if needed.
+      // The auth listener in AppShell will automatically update useAuthStore when Firebase detects profile change.
+    } catch (err) {
+      console.error('Error uploading photo:', err);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const displayName = profile?.displayName || user?.displayName || 'User';
 
   return (
@@ -35,13 +55,27 @@ export default function SettingsPage() {
 
         {/* Profile Card */}
         <div className="settings-profile solid-card">
-          <div className="settings-avatar">
-            {profile?.photoURL ? (
-              <img src={profile.photoURL} alt="Profile" />
+          <label className="settings-avatar" style={{ cursor: 'pointer', position: 'relative' }}>
+            <input
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handlePhotoUpload}
+              disabled={isUploading}
+            />
+            {profile?.photoURL || user?.photoURL ? (
+              <img 
+                src={profile?.photoURL || user?.photoURL || ''} 
+                alt="Profile" 
+                style={{ opacity: isUploading ? 0.5 : 1, width: '100%', height: '100%', objectFit: 'cover' }} 
+              />
             ) : (
-              <span>{displayName.charAt(0).toUpperCase()}</span>
+              <span style={{ opacity: isUploading ? 0.5 : 1 }}>{displayName.charAt(0).toUpperCase()}</span>
             )}
-          </div>
+            <div className="settings-avatar-overlay">
+              <Camera size={20} color="#fff" />
+            </div>
+          </label>
           <div className="settings-profile-info">
             <h2 className="text-h3">{displayName}</h2>
             <p className="text-caption">{user?.email}</p>
