@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -57,7 +57,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     if (!user && !isPublicPath) {
       router.replace('/login');
     } else if (user && !user.emailVerified && pathname !== '/verify-email' && !pathname.startsWith('/login')) {
-      // Email not verified â€” redirect to verification page
+      // Email not verified ΓÇö redirect to verification page
       // Exception for Google sign-in users who are auto-verified
       const isGoogleUser = user.providerData.some(p => p.providerId === 'google.com');
       if (!isGoogleUser) {
@@ -75,7 +75,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     return (
       <div className="app-loading">
         <div className="app-loading-content">
-          <div className="app-loading-logo">ðŸ’°</div>
+          <div className="app-loading-logo"><img src="/logo.png" alt="AzeWallet" style={{ width: '64px', height: '64px', objectFit: 'contain' }} /></div>
           <div className="app-loading-spinner" />
         </div>
 
