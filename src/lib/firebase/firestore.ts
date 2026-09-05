@@ -415,7 +415,7 @@ async function updateAccountBalance(
 // Internal: Recalculate Dashboard Summary
 // ============================================
 
-async function recalculateDashboardSummary(uid: string): Promise<void> {
+export async function recalculateDashboardSummary(uid: string): Promise<void> {
   try {
     // Get user profile for budget cycle info
     const userDocRef = await getDoc(doc(db, 'users', uid));
