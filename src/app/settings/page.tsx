@@ -6,7 +6,7 @@ import { LogOut, Moon, Sun, User as UserIcon, Monitor, ChevronRight, Camera, Cal
 import { useAuthStore, useAppStore } from '@/stores';
 import { signOut, updateUserPhotoURL } from '@/lib/firebase/auth';
 import { uploadProfilePhoto } from '@/lib/firebase/storage';
-import { updateUserProfile } from '@/lib/firebase/firestore';
+import { updateUserProfile, recalculateDashboardSummary } from '@/lib/firebase/firestore';
 import type { ThemeMode } from '@/types';
 
 export default function SettingsPage() {
@@ -84,6 +84,7 @@ export default function SettingsPage() {
           await updateUserProfile(user.uid, { monthlyBudget: newBudget, monthlyIncome: newBudget });
           setProfile({ ...profile, monthlyBudget: newBudget, monthlyIncome: newBudget });
           setMonthlyBudgetInput(newBudget.toString());
+          await recalculateDashboardSummary(user.uid);
         }
       } else if (type === 'weekly') {
         const newBudget = parseInt(weeklyBudgetInput.replace(/\D/g, ''), 10) || 0;
@@ -91,6 +92,7 @@ export default function SettingsPage() {
           await updateUserProfile(user.uid, { weeklyBudget: newBudget });
           setProfile({ ...profile, weeklyBudget: newBudget });
           setWeeklyBudgetInput(newBudget.toString());
+          await recalculateDashboardSummary(user.uid);
         }
       } else if (type === 'daily') {
         const newBudget = parseInt(dailyBudgetInput.replace(/\D/g, ''), 10) || 0;
@@ -98,6 +100,7 @@ export default function SettingsPage() {
           await updateUserProfile(user.uid, { dailyBudget: newBudget });
           setProfile({ ...profile, dailyBudget: newBudget });
           setDailyBudgetInput(newBudget.toString());
+          await recalculateDashboardSummary(user.uid);
         }
       }
     } catch (err) {
