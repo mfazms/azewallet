@@ -503,20 +503,22 @@ export async function recalculateDashboardSummary(uid: string): Promise<void> {
       (now.getTime() - cycleStartDate.getTime()) / (1000 * 60 * 60 * 24)
     ));
 
-    // Calculate daily budget limit
-    // If user explicitly set dailyBudget, use that as base
-    // Otherwise derive from monthly: monthlyBudget / days_in_cycle
-    const baseDailyLimit = userProfile.dailyBudget || Math.round(monthlyBudget / totalDaysInCycle);
-    const baseWeeklyLimit = userProfile.weeklyBudget || Math.round(monthlyBudget / 4);
-
-    // Rolling daily budget: if user overspent previous days, today's limit shrinks
-    // Total budget so far for elapsed days = baseDailyLimit * daysElapsed
-    // Remaining budget for today = (baseDailyLimit * daysElapsed) - monthlySpent
-    // But cap it so it's not more than baseDailyLimit (no hoarding more than 1 day)
-    const cumulativeBudgetSoFar = baseDailyLimit * daysElapsed;
-    const rollingDailyLimit = Math.max(0, Math.min(baseDailyLimit * 1.5, cumulativeBudgetSoFar - (monthlySpent - todaySpent)));
-
-    let safeToSpendToday = Math.max(0, rollingDailyLimit - todaySpent);
+    // Calculate daily budget limit based on remaining budget and remaining days
+    const discretionaryRemaining = monthlyBudget - remainingRecurring - goalContributions;
+    
+    // Total spent in this month EXCLUDING today
+    const spentBeforeToday = monthlySpent - todaySpent;
+    
+    // Today's limit is whatever is left, spread evenly over the remaining days
+    // This naturally accumulates underspending, and penalizes overspending.
+    const rollingDailyLimit = Math.max(0, (discretionaryRemaining - spentBeforeToday) / daysRemaining);
+    
+    // Remaining for today
+    const safeToSpendToday = Math.max(0, rollingDailyLimit - todaySpent);
+    
+    // Auto-calculate weekly budget based on monthly
+    const weeksInCycle = totalDaysInCycle / 7;
+    const baseWeeklyLimit = Math.round(monthlyBudget / weeksInCycle);
 
     // Forecast
     const dailyPace = monthlySpent / daysElapsed;
