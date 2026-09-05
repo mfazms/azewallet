@@ -1,11 +1,11 @@
-﻿'use client';
+'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, X, ChevronDown } from 'lucide-react';
 import BottomSheet from '@/components/ui/BottomSheet';
 import { useAuthStore, useAppStore } from '@/stores';
-import { createTransaction, updateTransaction } from '@/lib/firebase/firestore';
+import { createTransaction, updateTransaction, softDeleteTransaction } from '@/lib/firebase/firestore';
 import { uploadReceipt } from '@/lib/firebase/storage';
 import { DEFAULT_CATEGORIES } from '@/types';
 import type { TransactionType, Transaction } from '@/types';
@@ -111,6 +111,24 @@ export default function TransactionComposer({ isOpen, onClose, editTransaction }
       const reader = new FileReader();
       reader.onload = () => setImagePreview(reader.result as string);
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!user || !editTransaction?.id || isSubmitting) return;
+    if (!window.confirm("Are you sure you want to delete this transaction?")) return;
+    
+    setIsSubmitting(true);
+    try {
+      await softDeleteTransaction(user.uid, editTransaction.id);
+      removeTransaction(editTransaction.id);
+      showToast('Transaction deleted');
+      onClose();
+    } catch (err) {
+      console.error('Delete error:', err);
+      showToast('Failed to delete transaction');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -369,14 +387,26 @@ export default function TransactionComposer({ isOpen, onClose, editTransaction }
           </div>
         )}
 
-        <button
-          className="btn-primary"
-          onClick={handleSubmit}
-          disabled={!amount || !selectedAccountId || isSubmitting}
-          style={{ marginTop: '1rem', height: '3.5rem' }}
-        >
-          {isSubmitting ? 'Saving...' : (editTransaction ? 'Save Changes' : 'Save Transaction')}
-        </button>
+        <div style={{ display: 'flex', gap: '8px', marginTop: '1rem' }}>
+          {editTransaction && (
+            <button
+              className="btn-secondary"
+              onClick={handleDelete}
+              disabled={isSubmitting}
+              style={{ flex: '0 0 auto', padding: '0 1.5rem', height: '3.5rem', color: 'var(--color-expense)', borderColor: 'rgba(239, 68, 68, 0.2)' }}
+            >
+              Delete
+            </button>
+          )}
+          <button
+            className="btn-primary"
+            onClick={handleSubmit}
+            disabled={!amount || !selectedAccountId || isSubmitting}
+            style={{ flex: 1, height: '3.5rem' }}
+          >
+            {isSubmitting ? 'Saving...' : (editTransaction ? 'Save Changes' : 'Save Transaction')}
+          </button>
+        </div>
       </div>
     </BottomSheet>
   );

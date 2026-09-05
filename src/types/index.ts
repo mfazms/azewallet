@@ -20,9 +20,12 @@ export interface UserProfile {
   photoURL: string | null;
   preferredLanguage: Language;
   preferredCurrency: Currency;
-  monthlyIncome: number;
+  monthlyIncome?: number;
   paydayDate: number; // 1-31
-  budgetCycleStart: number; // 1-31
+  budgetCycleStart?: number;
+  monthlyBudget?: number;
+  weeklyBudget?: number;
+  dailyBudget?: number;
   theme: ThemeMode;
   isOnboardingComplete: boolean;
   createdAt: string;

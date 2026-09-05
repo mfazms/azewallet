@@ -79,7 +79,7 @@ export default function LoginPage() {
             transition={{ delay: 0.1, type: 'spring', stiffness: 300, damping: 25 }}
             className="auth-logo"
           >
-            <img src="/logo.png" alt="AzeWallet" style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
+            <img src="/logo.png" alt="AzeWallet" style={{ width: '96px', height: '96px', objectFit: 'contain' }} />
           </motion.div>
           <h1 className="auth-title">Take control of<br />your money</h1>
           <p className="auth-subtitle">Know if you&apos;re safe to spend — in 3 seconds.</p>

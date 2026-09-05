@@ -16,14 +16,18 @@ export default function SettingsPage() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isUpdatingPayday, setIsUpdatingPayday] = useState(false);
   const [isUpdatingBudget, setIsUpdatingBudget] = useState(false);
-  const [budgetInput, setBudgetInput] = useState('');
+  const [monthlyBudgetInput, setMonthlyBudgetInput] = useState('');
+  const [weeklyBudgetInput, setWeeklyBudgetInput] = useState('');
+  const [dailyBudgetInput, setDailyBudgetInput] = useState('');
 
   // Sync budget input with profile on load
   useEffect(() => {
-    if (profile?.monthlyIncome) {
-      setBudgetInput(profile.monthlyIncome.toString());
+    if (profile?.monthlyBudget || profile?.monthlyIncome) {
+      setMonthlyBudgetInput((profile.monthlyBudget || profile.monthlyIncome || '').toString());
     }
-  }, [profile?.monthlyIncome]);
+    if (profile?.weeklyBudget) setWeeklyBudgetInput(profile.weeklyBudget.toString());
+    if (profile?.dailyBudget) setDailyBudgetInput(profile.dailyBudget.toString());
+  }, [profile?.monthlyIncome, profile?.monthlyBudget, profile?.weeklyBudget, profile?.dailyBudget]);
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
@@ -69,18 +73,33 @@ export default function SettingsPage() {
     }
   };
 
-  const handleBudgetBlur = async () => {
+  const handleBudgetBlur = async (type: 'monthly' | 'weekly' | 'daily') => {
     if (!user || !profile) return;
-    const newBudget = parseInt(budgetInput.replace(/\D/g, ''), 10) || 0;
     
-    // If it hasn't changed, do nothing
-    if (newBudget === profile.monthlyIncome) return;
-
     setIsUpdatingBudget(true);
     try {
-      await updateUserProfile(user.uid, { monthlyIncome: newBudget });
-      setProfile({ ...profile, monthlyIncome: newBudget });
-      setBudgetInput(newBudget.toString());
+      if (type === 'monthly') {
+        const newBudget = parseInt(monthlyBudgetInput.replace(/\D/g, ''), 10) || 0;
+        if (newBudget !== (profile.monthlyBudget || profile.monthlyIncome)) {
+          await updateUserProfile(user.uid, { monthlyBudget: newBudget, monthlyIncome: newBudget });
+          setProfile({ ...profile, monthlyBudget: newBudget, monthlyIncome: newBudget });
+          setMonthlyBudgetInput(newBudget.toString());
+        }
+      } else if (type === 'weekly') {
+        const newBudget = parseInt(weeklyBudgetInput.replace(/\D/g, ''), 10) || 0;
+        if (newBudget !== profile.weeklyBudget) {
+          await updateUserProfile(user.uid, { weeklyBudget: newBudget });
+          setProfile({ ...profile, weeklyBudget: newBudget });
+          setWeeklyBudgetInput(newBudget.toString());
+        }
+      } else if (type === 'daily') {
+        const newBudget = parseInt(dailyBudgetInput.replace(/\D/g, ''), 10) || 0;
+        if (newBudget !== profile.dailyBudget) {
+          await updateUserProfile(user.uid, { dailyBudget: newBudget });
+          setProfile({ ...profile, dailyBudget: newBudget });
+          setDailyBudgetInput(newBudget.toString());
+        }
+      }
     } catch (err) {
       console.error('Error updating budget:', err);
     } finally {
@@ -183,28 +202,53 @@ export default function SettingsPage() {
 
             <div className="settings-divider" />
 
-            {/* Monthly Budget Setting */}
-            <div className="settings-item">
-              <div className="settings-item-icon"><Wallet size={18} /></div>
-              <span className="settings-item-label">Monthly Budget (Rp)</span>
-              <input
-                type="text"
-                value={budgetInput}
-                onChange={(e) => setBudgetInput(e.target.value)}
-                onBlur={handleBudgetBlur}
-                disabled={isUpdatingBudget}
-                placeholder="e.g. 5000000"
-                style={{ 
-                  background: 'var(--color-input-bg)', 
-                  border: 'none', 
-                  borderRadius: 'var(--radius-md)', 
-                  padding: '4px 8px',
-                  color: 'var(--color-text)',
-                  fontSize: '15px',
-                  width: '100px',
-                  textAlign: 'right'
-                }}
-              />
+            {/* Budget Targets Setting */}
+            <div className="settings-item" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <div className="settings-item-icon"><Wallet size={18} /></div>
+                <span className="settings-item-label">Budget Targets (Rp)</span>
+              </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px', width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--color-input-bg)', padding: '8px 12px', borderRadius: 'var(--radius-md)' }}>
+                  <span style={{ fontSize: '13px', opacity: 0.7 }}>Monthly</span>
+                  <input
+                    type="text"
+                    value={monthlyBudgetInput}
+                    onChange={(e) => setMonthlyBudgetInput(e.target.value)}
+                    onBlur={() => handleBudgetBlur('monthly')}
+                    disabled={isUpdatingBudget}
+                    placeholder="e.g. 5000000"
+                    style={{ background: 'transparent', border: 'none', textAlign: 'right', color: 'var(--color-text)', width: '120px' }}
+                  />
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--color-input-bg)', padding: '8px 12px', borderRadius: 'var(--radius-md)' }}>
+                  <span style={{ fontSize: '13px', opacity: 0.7 }}>Weekly</span>
+                  <input
+                    type="text"
+                    value={weeklyBudgetInput}
+                    onChange={(e) => setWeeklyBudgetInput(e.target.value)}
+                    onBlur={() => handleBudgetBlur('weekly')}
+                    disabled={isUpdatingBudget}
+                    placeholder="Optional"
+                    style={{ background: 'transparent', border: 'none', textAlign: 'right', color: 'var(--color-text)', width: '120px' }}
+                  />
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--color-input-bg)', padding: '8px 12px', borderRadius: 'var(--radius-md)' }}>
+                  <span style={{ fontSize: '13px', opacity: 0.7 }}>Daily</span>
+                  <input
+                    type="text"
+                    value={dailyBudgetInput}
+                    onChange={(e) => setDailyBudgetInput(e.target.value)}
+                    onBlur={() => handleBudgetBlur('daily')}
+                    disabled={isUpdatingBudget}
+                    placeholder="Optional"
+                    style={{ background: 'transparent', border: 'none', textAlign: 'right', color: 'var(--color-text)', width: '120px' }}
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="settings-divider" />

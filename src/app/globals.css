@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 /* ============================================
-   CSS Custom Properties — Light/Dark Themes
+   CSS Custom Properties â€” Light/Dark Themes
    ============================================ */
 
 :root {
@@ -125,7 +125,7 @@ html {
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
-  font-size: 1.0625rem; /* 17px — iOS default */
+  font-size: 1.0625rem; /* 17px â€” iOS default */
   line-height: 1.4;
   overflow-x: hidden;
   min-height: 100dvh;
@@ -143,7 +143,7 @@ button, a, [role="button"] {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Minimum touch target (Apple HIG: 44×44pt) */
+/* Minimum touch target (Apple HIG: 44Ã—44pt) */
 button, a, [role="button"], input, select, textarea {
   min-height: 44px;
 }
@@ -563,7 +563,7 @@ button, a, [role="button"], input, select, textarea {
 }
 
 /* ============================================
-   Responsive — Desktop Sidebar Layout
+   Responsive â€” Desktop Sidebar Layout
    ============================================ */
 
 @media (min-width: 1024px) {
@@ -591,7 +591,7 @@ button, a, [role="button"], input, select, textarea {
           transition: transform 0.4s cubic-bezier(0.2, 1.4, 0.4, 1);
         }
         .acc-card:not(:first-child) {
-          margin-top: -80px; /* Card stacking */
+          margin-top: 16px;
         }
         .acc-card:hover {
           transform: translateY(-20px);

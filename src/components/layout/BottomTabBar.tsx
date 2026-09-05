@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -50,15 +50,17 @@ export default function BottomTabBar() {
       })}
 
       {/* FAB Button - Rendered independently as it's absolute positioned */}
-      <button
-        className="fab-button"
-        onClick={() => setTransactionSheetOpen(true)}
-        aria-label="Add transaction"
-      >
-        <div className="fab-inner">
-          <Plus size={28} strokeWidth={2.5} />
-        </div>
-      </button>
+      {pathname !== '/ai' && (
+        <button
+          className="fab-button"
+          onClick={() => setTransactionSheetOpen(true)}
+          aria-label="Add transaction"
+        >
+          <div className="fab-inner">
+            <Plus size={28} strokeWidth={2.5} />
+          </div>
+        </button>
+      )}
 
       
     </nav>

@@ -134,7 +134,34 @@ export async function updateTransaction(
   transactionId: string,
   data: Partial<Transaction>
 ): Promise<void> {
-  await updateDoc(userDoc(uid, 'transactions', transactionId), {
+  const txRef = userDoc(uid, 'transactions', transactionId);
+  const oldTxSnap = await getDoc(txRef);
+  
+  if (oldTxSnap.exists()) {
+    const oldTx = oldTxSnap.data() as Transaction;
+    const oldImpact = oldTx.type === 'expense' ? oldTx.amount : oldTx.type === 'income' ? -oldTx.amount : 0;
+    
+    const newType = data.type || oldTx.type;
+    const newAmount = data.amount !== undefined ? data.amount : oldTx.amount;
+    const newImpact = newType === 'expense' ? -newAmount : newType === 'income' ? newAmount : 0;
+    
+    const balanceChange = oldImpact + newImpact;
+    
+    if (balanceChange !== 0) {
+      const accountId = data.accountId || oldTx.accountId;
+      const accountRef = userDoc(uid, 'accounts', accountId);
+      const accSnap = await getDoc(accountRef);
+      if (accSnap.exists()) {
+        const currentBalance = accSnap.data().balance || 0;
+        await updateDoc(accountRef, {
+          balance: currentBalance + balanceChange,
+          updatedAt: serverTimestamp(),
+        });
+      }
+    }
+  }
+
+  await updateDoc(txRef, {
     ...data,
     updatedAt: serverTimestamp(),
   });
@@ -143,7 +170,28 @@ export async function updateTransaction(
 
 // Soft delete with undo support
 export async function softDeleteTransaction(uid: string, transactionId: string): Promise<void> {
-  await updateDoc(userDoc(uid, 'transactions', transactionId), {
+  const txRef = userDoc(uid, 'transactions', transactionId);
+  const oldTxSnap = await getDoc(txRef);
+  
+  if (oldTxSnap.exists()) {
+    const oldTx = oldTxSnap.data() as Transaction;
+    // Revert the transaction's impact
+    const oldImpact = oldTx.type === 'expense' ? oldTx.amount : oldTx.type === 'income' ? -oldTx.amount : 0;
+    
+    if (oldImpact !== 0) {
+      const accountRef = userDoc(uid, 'accounts', oldTx.accountId);
+      const accSnap = await getDoc(accountRef);
+      if (accSnap.exists()) {
+        const currentBalance = accSnap.data().balance || 0;
+        await updateDoc(accountRef, {
+          balance: currentBalance + oldImpact,
+          updatedAt: serverTimestamp(),
+        });
+      }
+    }
+  }
+
+  await updateDoc(txRef, {
     deletedAt: new Date().toISOString(),
     updatedAt: serverTimestamp(),
   });
@@ -438,13 +486,18 @@ async function recalculateDashboardSummary(uid: string): Promise<void> {
     ));
 
     const discretionaryRemaining =
-      (userProfile.monthlyIncome || monthlyBudget)
+      (userProfile.monthlyBudget || userProfile.monthlyIncome || monthlyBudget)
       - remainingRecurring
       - goalContributions;
 
-    const safeToSpendToday = Math.max(0,
-      (discretionaryRemaining - monthlySpent) / daysRemaining
-    );
+    let safeToSpendToday = 0;
+    if (userProfile.dailyBudget) {
+      safeToSpendToday = Math.max(0, userProfile.dailyBudget - todaySpent);
+    } else {
+      safeToSpendToday = Math.max(0,
+        (discretionaryRemaining - monthlySpent) / daysRemaining
+      );
+    }
 
     // Forecast
     const daysElapsed = Math.max(1, Math.ceil(

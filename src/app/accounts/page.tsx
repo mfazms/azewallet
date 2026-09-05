@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
@@ -88,7 +88,7 @@ export default function AccountsPage() {
           color: '',
           gradient: suggestion?.gradient || 'linear-gradient(135deg, #546E7A, #90A4AE)',
           icon: suggestion?.icon || (accType === 'bank' ? '🏦' : accType === 'ewallet' ? '💳' : accType === 'cash' ? '💵' : '🏦'),
-          logoUrl: suggestion?.logoUrl,
+          ...(suggestion?.logoUrl ? { logoUrl: suggestion.logoUrl } : {}),
           isDefault: accounts.length === 0,
         });
       }

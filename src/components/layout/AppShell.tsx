@@ -75,7 +75,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     return (
       <div className="app-loading">
         <div className="app-loading-content">
-          <div className="app-loading-logo"><img src="/logo.png" alt="AzeWallet" style={{ width: '64px', height: '64px', objectFit: 'contain' }} /></div>
+          <div className="app-loading-logo"><img src="/logo.png" alt="AzeWallet" style={{ width: '120px', height: '120px', objectFit: 'contain' }} /></div>
           <div className="app-loading-spinner" />
         </div>
 

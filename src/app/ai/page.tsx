@@ -1,12 +1,11 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import SiriOrb from '@/components/ui/SiriOrb';
 import { Send, Sparkles, User, RefreshCw, Trash2 } from 'lucide-react';
 import { useAuthStore, useAppStore } from '@/stores';
 import { getChatHistory, saveChatMessage, createTransaction } from '@/lib/firebase/firestore';
-import { geminiModel } from '@/lib/gemini';
+import { sendMessageWithRetry } from '@/lib/gemini';
 import type { ChatMessage } from '@/lib/firebase/firestore';
 
 export default function AIPage() {
@@ -68,9 +67,7 @@ export default function AIPage() {
           parts: m.parts
         }));
 
-      const chat = geminiModel.startChat({ history: history.slice(0, -1) });
-      const result = await chat.sendMessage(userMsg.parts[0].text);
-      const response = result.response;
+      const response = await sendMessageWithRetry(history.slice(0, -1), userMsg.parts[0].text);
       
       let botText = response.text() || '';
 
@@ -157,8 +154,9 @@ export default function AIPage() {
   return (
     <div className="page-container" style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <header className="act-header" style={{ paddingBottom: '1rem', borderBottom: '1px solid var(--color-glass-border)' }}>
-        <h1 className="text-h1" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <SiriOrb status={isTyping ? 'thinking' : 'idle'} size={40} /> Aze Intelligence
+        <h1 className="text-h1" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <img src="/chatbot-logo.png" alt="Aze Intelligence" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
+          Aze Intelligence
         </h1>
       </header>
 
@@ -180,21 +178,27 @@ export default function AIPage() {
               key={m.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`chat-bubble ${m.role === 'user' ? 'chat-user' : 'chat-model'}`}
-              style={{
-                alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
-                maxWidth: '85%',
-                background: m.role === 'user' ? 'var(--color-accent)' : 'var(--color-surface)',
-                color: m.role === 'user' ? '#fff' : 'var(--color-text)',
-                padding: '12px 16px',
-                borderRadius: m.role === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
-                border: m.role === 'user' ? 'none' : '1px solid var(--color-glass-border)',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                lineHeight: 1.5,
-                fontSize: '0.9375rem'
-              }}
             >
-              {m.parts[0].text}
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
+                {m.role === 'model' && (
+                  <img src="/chatbot-logo.png" alt="Aze" style={{ width: '28px', height: '28px', objectFit: 'contain', flexShrink: 0 }} />
+                )}
+                <div
+                  className={`chat-bubble ${m.role === 'user' ? 'chat-user' : 'chat-model'}`}
+                  style={{
+                    background: m.role === 'user' ? 'var(--color-accent)' : 'var(--color-surface)',
+                    color: m.role === 'user' ? '#fff' : 'var(--color-text)',
+                    padding: '12px 16px',
+                    borderRadius: m.role === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
+                    border: m.role === 'user' ? 'none' : '1px solid var(--color-glass-border)',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                    lineHeight: 1.5,
+                    fontSize: '0.9375rem'
+                  }}
+                >
+                  {m.parts[0].text}
+                </div>
+              </div>
             </motion.div>
           ))}
           
