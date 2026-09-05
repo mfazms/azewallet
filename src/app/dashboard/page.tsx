@@ -56,10 +56,17 @@ export default function DashboardPage() {
   const safeToSpend = summary?.safeToSpendToday ?? 0;
   const todaySpent = summary?.todaySpent ?? 0;
   const dailyLimit = summary?.dailySoftLimit ?? 0;
+  
+  const weeklySpent = summary?.weeklySpent ?? 0;
+  const weeklyLimit = summary?.weeklySoftLimit ?? 0;
+  
   const monthlySpent = summary?.monthlySpent ?? 0;
   const monthlyBudget = summary?.monthlyBudget ?? 0;
+  
   const todayPercentage = formatPercentage(todaySpent, dailyLimit || 1);
+  const weeklyPercentage = formatPercentage(weeklySpent, weeklyLimit || 1);
   const monthlyPercentage = formatPercentage(monthlySpent, monthlyBudget || 1);
+  
   const mainGoal = goals.length > 0 ? goals[0] : null;
   const totalBalance = summary?.totalBalance ?? accounts.reduce((s, a) => s + a.balance, 0);
 
@@ -144,7 +151,7 @@ export default function DashboardPage() {
           {dailyLimit > 0 && (
             <div style={{ marginTop: 12, padding: '10px 12px', background: 'var(--color-input-bg)', borderRadius: 'var(--radius-md)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--ink-secondary)', marginBottom: 6 }}>
-                <span>Today&apos;s limit</span>
+                <span>Today's limit (inc. rollover)</span>
                 <span>{formatCurrency(dailyLimit)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: 6 }}>
@@ -171,6 +178,35 @@ export default function DashboardPage() {
             </div>
           )}
         </motion.section>
+
+        {/* Weekly Budget Card (Glass) */}
+        {weeklyLimit > 0 && (
+          <motion.section variants={itemVariants} className="dash-monthly glass-surface" style={{ padding: 16, marginTop: 16 }}>
+            <div className="dash-monthly-header">
+              <span className="text-callout" style={{ color: 'var(--ink-secondary)', fontWeight: 500 }}>Weekly budget</span>
+              <span className="text-caption">{weeklyPercentage}% used</span>
+            </div>
+            <div className="dash-monthly-amount" style={{ marginTop: 8 }}>
+              <span className="text-h3 text-money">{formatCompactCurrency(weeklySpent)}</span>
+              <span className="text-body-small" style={{ color: 'var(--ink-secondary)' }}>
+                {' '} / {formatCompactCurrency(weeklyLimit)}
+              </span>
+            </div>
+            <div className="dash-progress-bar" style={{ marginTop: 12 }}>
+              <motion.div
+                className="dash-progress-fill"
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min(100, weeklyPercentage)}%` }}
+                transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1], delay: 0.2 }}
+                style={{
+                  background: weeklyPercentage >= 90 ? 'var(--color-expense)'
+                    : weeklyPercentage >= 75 ? 'var(--color-warning)'
+                    : 'var(--color-income)',
+                }}
+              />
+            </div>
+          </motion.section>
+        )}
 
         {/* Monthly Budget Card (Glass) */}
         <motion.section variants={itemVariants} className="dash-monthly glass-surface" style={{ padding: 16, marginTop: 16 }}>

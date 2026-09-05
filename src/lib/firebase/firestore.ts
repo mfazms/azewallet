@@ -296,11 +296,11 @@ export async function deleteGoal(uid: string, goalId: string): Promise<void> {
 export async function getRecurring(uid: string): Promise<Recurring[]> {
   const q = query(
     userCollection(uid, 'recurring'),
-    where('isActive', '==', true),
-    orderBy('nextOccurrence', 'asc')
+    where('isActive', '==', true)
   );
   const snapshot = await getDocs(q);
-  return snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Recurring));
+  const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Recurring));
+  return items.sort((a, b) => new Date(a.nextOccurrence).getTime() - new Date(b.nextOccurrence).getTime());
 }
 
 // ============================================
@@ -448,15 +448,27 @@ export async function recalculateDashboardSummary(uid: string): Promise<void> {
     const transactions = txSnapshot.docs.map(d => d.data() as Transaction);
 
     // Calculate today's spending
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-    const todayTransactions = transactions.filter(
-      t => t.createdAtUTC >= todayStart && t.type === 'expense'
-    );
-    const todaySpent = todayTransactions.reduce((sum, t) => sum + t.amount, 0);
+    const todayStr = now.toISOString().split('T')[0];
+    const todayTransactions = transactions.filter(t => t.createdAtUTC.startsWith(todayStr));
+    const todaySpent = todayTransactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    // Calculate Weekly Spent (assuming week starts on Monday)
+    const currentDayOfWeek = now.getDay() || 7; // 1-7 where 1 is Monday, 7 is Sunday
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - currentDayOfWeek + 1);
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    const weeklyTransactions = transactions.filter(t => new Date(t.createdAtUTC) >= startOfWeek && new Date(t.createdAtUTC) <= now);
+    const weeklySpent = weeklyTransactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
 
     // Calculate monthly spending
-    const monthlyExpenses = transactions.filter(t => t.type === 'expense');
-    const monthlySpent = monthlyExpenses.reduce((sum, t) => sum + t.amount, 0);
+    const monthlySpent = transactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
     const monthlyIncomeTotal = transactions
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
@@ -515,6 +527,7 @@ export async function recalculateDashboardSummary(uid: string): Promise<void> {
       safeToSpendToday: Math.round(safeToSpendToday),
       dailySoftLimit: Math.round(rollingDailyLimit),
       weeklySoftLimit: Math.round(baseWeeklyLimit),
+      weeklySpent,
       todaySpent,
       todayTransactionCount: todayTransactions.length,
       monthlySpent,

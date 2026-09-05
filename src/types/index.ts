@@ -183,6 +183,9 @@ export interface DashboardSummary {
   // Today
   todaySpent: number;
   todayTransactionCount: number;
+  // Weekly
+  weeklySpent: number;
+  weeklySoftLimit: number;
   // Monthly
   monthlySpent: number;
   monthlyIncome: number;
