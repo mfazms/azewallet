@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { TrendingUp, TrendingDown, ChevronRight, Wallet } from 'lucide-react';
 import { useAuthStore, useAppStore } from '@/stores';
-import { getDashboardSummary, getAccounts, getTransactions, getGoals } from '@/lib/firebase/firestore';
+import { getDashboardSummary, getAccounts, getTransactions, getGoals, recalculateDashboardSummary } from '@/lib/firebase/firestore';
 import { formatCurrency, formatCompactCurrency, getGreeting, formatPercentage } from '@/lib/formatting';
 import ProgressRing from '@/components/ui/ProgressRing';
 import AnimatedNumber from '@/components/ui/AnimatedNumber';
@@ -43,7 +43,15 @@ export default function DashboardPage() {
         getGoals(user.uid),
       ]);
 
-      setDashboardSummary(summary);
+      // If summary is completely missing or 0, attempt a recalculation
+      if (!summary || summary.monthlyBudget === 0) {
+        await recalculateDashboardSummary(user.uid);
+        const newSummary = await getDashboardSummary(user.uid);
+        setDashboardSummary(newSummary);
+      } else {
+        setDashboardSummary(summary);
+      }
+
       setAccounts(accs);
       setTransactions(txs);
       setGoals(gls);
