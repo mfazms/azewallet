@@ -178,8 +178,13 @@ export default function AIPage() {
               key={m.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
+              style={{
+                display: 'flex',
+                justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start',
+                width: '100%'
+              }}
             >
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', maxWidth: '85%' }}>
                 {m.role === 'model' && (
                   <img src="/chatbot-logo.png" alt="Aze" style={{ width: '28px', height: '28px', objectFit: 'contain', flexShrink: 0 }} />
                 )}

@@ -112,32 +112,64 @@ export default function DashboardPage() {
         </motion.header>
 
         {/* Safe to Spend Today Card (Glass) */}
-        <motion.section variants={itemVariants} className="dash-safe-card glass-surface" style={{ padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div className="dash-safe-label" style={{ color: 'var(--ink-secondary)', marginBottom: 8, justifyContent: 'flex-start' }}>
-              <span>Safe to spend today</span>
-            </div>
-            {summary?.isOnTrack !== undefined && (
-              <div className={`dash-safe-status ${summary.isOnTrack ? 'status-good' : 'status-warn'}`} style={{ marginLeft: 0 }}>
-                {summary.isOnTrack ? (
-                  <>
-                    <TrendingUp size={14} />
-                    <span>On track</span>
-                  </>
-                ) : (
-                  <>
-                    <TrendingDown size={14} />
-                    <span>Spending fast</span>
-                  </>
-                )}
+        <motion.section variants={itemVariants} className="dash-safe-card glass-surface" style={{ padding: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div className="dash-safe-label" style={{ color: 'var(--ink-secondary)', marginBottom: 8, justifyContent: 'flex-start' }}>
+                <span>Safe to spend today</span>
               </div>
-            )}
+              {summary?.isOnTrack !== undefined && (
+                <div className={`dash-safe-status ${summary.isOnTrack ? 'status-good' : 'status-warn'}`} style={{ marginLeft: 0 }}>
+                  {summary.isOnTrack ? (
+                    <>
+                      <TrendingUp size={14} />
+                      <span>On track</span>
+                    </>
+                  ) : (
+                    <>
+                      <TrendingDown size={14} />
+                      <span>Spending fast</span>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+            <ProgressRing progress={todayPercentage} size={64} strokeWidth={6}>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink)' }}>
+                {todayPercentage}%
+              </span>
+            </ProgressRing>
           </div>
-          <ProgressRing progress={todayPercentage} size={64} strokeWidth={6}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink)' }}>
-              {todayPercentage}%
-            </span>
-          </ProgressRing>
+          {/* Daily spending breakdown */}
+          {dailyLimit > 0 && (
+            <div style={{ marginTop: 12, padding: '10px 12px', background: 'var(--color-input-bg)', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--ink-secondary)', marginBottom: 6 }}>
+                <span>Today&apos;s limit</span>
+                <span>{formatCurrency(dailyLimit)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: 6 }}>
+                <span style={{ color: 'var(--color-expense)' }}>Spent</span>
+                <span style={{ color: 'var(--color-expense)', fontWeight: 600 }}>{formatCurrency(todaySpent)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                <span style={{ color: 'var(--color-income)' }}>Remaining</span>
+                <span style={{ color: 'var(--color-income)', fontWeight: 600 }}>{formatCurrency(safeToSpend)}</span>
+              </div>
+              <div className="dash-progress-bar" style={{ marginTop: 8 }}>
+                <motion.div
+                  className="dash-progress-fill"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(100, todayPercentage)}%` }}
+                  transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+                  style={{
+                    background: todayPercentage >= 90 ? 'var(--color-expense)'
+                      : todayPercentage >= 75 ? 'var(--color-warning)'
+                      : 'var(--color-income)',
+                  }}
+                />
+              </div>
+            </div>
+          )}
         </motion.section>
 
         {/* Monthly Budget Card (Glass) */}

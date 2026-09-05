@@ -467,7 +467,7 @@ async function recalculateDashboardSummary(uid: string): Promise<void> {
 
     // Get current budget
     const budget = await getCurrentBudget(uid);
-    const monthlyBudget = budget?.totalBudget || userProfile.monthlyIncome || 0;
+    const monthlyBudget = userProfile.monthlyBudget || userProfile.monthlyIncome || budget?.totalBudget || 0;
 
     // Get goals
     const goals = await getGoals(uid);
@@ -484,35 +484,37 @@ async function recalculateDashboardSummary(uid: string): Promise<void> {
     const daysRemaining = Math.max(1, Math.ceil(
       (cycleEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
     ));
-
-    const discretionaryRemaining =
-      (userProfile.monthlyBudget || userProfile.monthlyIncome || monthlyBudget)
-      - remainingRecurring
-      - goalContributions;
-
-    let safeToSpendToday = 0;
-    if (userProfile.dailyBudget) {
-      safeToSpendToday = Math.max(0, userProfile.dailyBudget - todaySpent);
-    } else {
-      safeToSpendToday = Math.max(0,
-        (discretionaryRemaining - monthlySpent) / daysRemaining
-      );
-    }
-
-    // Forecast
+    const totalDaysInCycle = Math.max(1, Math.ceil(
+      (cycleEndDate.getTime() - cycleStartDate.getTime()) / (1000 * 60 * 60 * 24)
+    ));
     const daysElapsed = Math.max(1, Math.ceil(
       (now.getTime() - cycleStartDate.getTime()) / (1000 * 60 * 60 * 24)
     ));
+
+    // Calculate daily budget limit
+    // If user explicitly set dailyBudget, use that as base
+    // Otherwise derive from monthly: monthlyBudget / days_in_cycle
+    const baseDailyLimit = userProfile.dailyBudget || Math.round(monthlyBudget / totalDaysInCycle);
+    const baseWeeklyLimit = userProfile.weeklyBudget || Math.round(monthlyBudget / 4);
+
+    // Rolling daily budget: if user overspent previous days, today's limit shrinks
+    // Total budget so far for elapsed days = baseDailyLimit * daysElapsed
+    // Remaining budget for today = (baseDailyLimit * daysElapsed) - monthlySpent
+    // But cap it so it's not more than baseDailyLimit (no hoarding more than 1 day)
+    const cumulativeBudgetSoFar = baseDailyLimit * daysElapsed;
+    const rollingDailyLimit = Math.max(0, Math.min(baseDailyLimit * 1.5, cumulativeBudgetSoFar - (monthlySpent - todaySpent)));
+
+    let safeToSpendToday = Math.max(0, rollingDailyLimit - todaySpent);
+
+    // Forecast
     const dailyPace = monthlySpent / daysElapsed;
-    const totalDaysInCycle = Math.ceil(
-      (cycleEndDate.getTime() - cycleStartDate.getTime()) / (1000 * 60 * 60 * 24)
-    );
     const forecastedMonthlySpend = dailyPace * totalDaysInCycle;
 
     // Update summary document
     await updateDashboardSummary(uid, {
       safeToSpendToday: Math.round(safeToSpendToday),
-      dailySoftLimit: Math.round(discretionaryRemaining / totalDaysInCycle),
+      dailySoftLimit: Math.round(rollingDailyLimit),
+      weeklySoftLimit: Math.round(baseWeeklyLimit),
       todaySpent,
       todayTransactionCount: todayTransactions.length,
       monthlySpent,
